@@ -12,3 +12,4 @@ seaborn
 sklearn
 tqdm
 transformers
+statsmodels
