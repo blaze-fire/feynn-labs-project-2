@@ -1,21 +1,58 @@
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 import re
 
 path = "/home/krish/Downloads/chromedriver"
 
-website = "https://www.cardekho.com/tata/nexon-ev/user-reviews"
+GlobalWebsite = "https://www.cardekho.com/mg/zs-ev/user-reviews"
 
-attribs = ['mileage', 'performance', 'looks', 'comfort', 'engine', 'interior', 'power', 'price', 'safety', 'service', 'ac', 'maintenance', 'safety', 'speed', 'seat', 'space', 'style', 'clearance', 'dealer', 'experience', 'ground', 'maintenance', 'noise', 'pickup', 'service', 'torque', 'driver', 'headlamp', 'infotainment', 'rear', 'seat', 'steering', 'sunroof', 'suv', 'warranty', 'airbags', 'alloy', 'automatic', 'cabin', 'cabin', 'comparison', 'exterior', 'gear', 'legroom', 'lights', 'music', 'music', 'parking', 'parts', 'sensors', 'service', 'service', 'showroom', 'touch', 'vent', 'wheel']
+
+#for headless-mode
+options = Options()
+options.headless = True
+
+service = Service(executable_path=path)
+driver = webdriver.Chrome(service=service, options=options)
+driver.get(GlobalWebsite)
+
+containers = driver.find_elements(by="xpath",
+                                value='//ul[@class="galleryNav ReviewsTab marginBottom20"]')
+
+driver.find_element(by="xpath",
+                    value="//ul[@class='galleryNav ReviewsTab marginBottom20']/li[@id='moretab']").click()
+
+driver.implicitly_wait(2) # seconds
+
+categories = driver.find_elements(by="xpath",
+                                value="//div[@class='recommendedCars']/ul[@class='galleryNav ReviewsTab marginBottom20']")
+attribs = []
+
+for container in containers:
+    attributes = container.find_elements(by="xpath", value="./li[@class=' shadow24']")
+    for attribute in attributes:
+        text = attribute.text
+        attribs.append(re.findall(r"(?i)\b[a-z]+\b", text.lower())[0])
+
+
+for category in categories:
+    attributes = category.find_elements(by="xpath", value="./li[@class=' shadow24']")
+    for attribute in attributes:
+        text = attribute.text
+        attribs.append(re.findall(r"(?i)\b[a-z]+\b", text.lower())[0])
+
+
+print(attribs)
+
 
 for attribute in attribs:
     try:
-        website = "https://www.cardekho.com/tata/nexon-ev/user-reviews"
+        website = GlobalWebsite
         website = website + "/" + attribute
 
         service = Service(executable_path=path)
-        driver = webdriver.Chrome(service=service)
+        driver = webdriver.Chrome(service=service, options=options)
         driver.get(website)
 
         containers = driver.find_elements(by="xpath",
@@ -38,8 +75,13 @@ for attribute in attribs:
             try:
                 review = star.find_elements(by="xpath", value="./div/div[@class='contentspace']/p/span")
                 for rev in review:
-                    if rev.text:
+
+                    if rev.text == "Read More":
+                        pass
+
+                    elif rev.text:
                         review = rev.text
+
             except:
                 pass
 
@@ -56,25 +98,12 @@ for attribute in attribs:
 
             df = pd.concat([df, pd.DataFrame({"review": [review], "rating": [rating], "attribute": [attribute]})], axis=0, ignore_index=True)
 
-        df.to_csv("reviews/Newcardekho.csv", mode='a', index=False, header=None)
-
         print(df)
-
+        # df.to_csv("reviews/Newcardekho.csv", mode='a', index=False, header=None)
         driver.quit()
 
     except:
         pass
 
 
-#for container in containers:
-    #attributes = container.find_elements(by="xpath", value="./li[@class=' shadow24']")
-    #for attribute in attributes:
-        #text = attribute.text
-        #attribs.append(re.findall(r"(?i)\b[a-z]+\b", text.lower())[0])
 
-
-#for category in categories:
-    #attributes = category.find_elements(by="xpath", value="./li[@class=' shadow24']")
-    #for attribute in attributes:
-        #text = attribute.text
-        #attribs.append(re.findall(r"(?i)\b[a-z]+\b", text.lower())[0])
