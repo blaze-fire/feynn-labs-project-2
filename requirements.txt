@@ -1,15 +1,12 @@
-huggingface-hub
 matplotlib
 nltk
 numpy
 pandas
 plotly
-rake-nltk
 regex
 scikit-learn
 scipy
 seaborn
 sklearn
 tqdm
-transformers
 statsmodels
